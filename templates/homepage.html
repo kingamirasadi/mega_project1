@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication</title>
+    <link rel="stylesheet" href="/static/styles.css"> <!-- Link to your external CSS file -->
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-form">
+            <h2>Welcome</h2>
+            <p>Please choose an option:</p>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        <ul>
+                            {% for category, message in messages %}
+                                <li class="{{ category }}">{{ message }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <div class="button-container">
+                <button onclick="window.location.href='/login'">Login</button>
+                <button onclick="window.location.href='/create_account'">Create Account</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dual Live Camera Feed</title>
+    <link rel="stylesheet" href="/static/styles2.css">
+</head>
+<body>
+    <header>
+        <h1>Dual Live Camera Feed</h1>
+        <div class="logout-container">
+            <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+        </div>
+    </header>
+
+    <main>
+        <div class="stream-container">
+            <!-- First Live Stream -->
+            <div class="video-container">
+                <h2>Camera 1</h2>
+                <img src="{{ url_for('video_feed') }}" alt="Live Camera Feed 1">
+            </div>
+
+            <!-- Second Live Stream -->
+            <div class="video-container">
+                <h2>Camera 2</h2>
+                <img src="{{ url_for('video_feed1') }}" alt="Live Camera Feed 2">
+            </div>
+        </div>
+    </main>
+</body>
+</html>

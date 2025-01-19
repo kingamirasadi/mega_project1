@@ -1,0 +1,85 @@
+/* General styles */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Header styles */
+header {
+    width: 100%;
+    background-color: #333;
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+/* Logout button styles */
+.logout-container {
+    margin-left: auto;
+}
+
+.logout-button {
+    color: white;
+    text-decoration: none;
+    padding: 8px 16px;
+    background-color: #ff4b4b;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+    background-color: #ff1c1c;
+}
+
+/* Main content styles */
+main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 20px;
+}
+
+/* Stream container styles */
+.stream-container {
+    display: flex;
+    gap: 20px; /* Space between the two streams */
+    max-width: 1600px; /* Adjust based on your layout */
+    width: 100%;
+}
+
+/* Video container styles */
+.video-container {
+    flex: 1; /* Each container takes equal space */
+    background-color: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.video-container h2 {
+    color: white;
+    margin: 10px 0;
+}
+
+.video-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
