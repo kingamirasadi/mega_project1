@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dual Live Camera Feed</title>
+    <title>Multi Live Camera Feed</title>
     <link rel="stylesheet" href="/static/styles2.css">
 </head>
 <body>
     <header>
-        <h1>Dual Live Camera Feed</h1>
+        <h1>Multi Live Camera Feed</h1>
         <div class="logout-container">
             <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
         </div>
@@ -16,17 +16,33 @@
 
     <main>
         <div class="stream-container">
-            <!-- First Live Stream -->
+            <!-- Camera Feeds -->
             <div class="video-container">
                 <h2>Camera 1</h2>
-                <img src="{{ url_for('video_feed') }}" alt="Live Camera Feed 1">
+                <img src="{{ url_for('video_feed0') }}" alt="Live Camera Feed 1">
             </div>
-
-            <!-- Second Live Stream -->
             <div class="video-container">
                 <h2>Camera 2</h2>
                 <img src="{{ url_for('video_feed1') }}" alt="Live Camera Feed 2">
             </div>
+            <div class="video-container">
+                <h2>Camera 3</h2>
+                <img src="{{ url_for('video_feed2') }}" alt="Live Camera Feed 3">
+            </div>
+            <div class="video-container">
+                <h2>Camera 4</h2>
+                <img src="{{ url_for('video_feed3') }}" alt="Live Camera Feed 4">
+            </div>
+            <div class="video-container">
+                <h2>Camera 5</h2>
+                <img src="{{ url_for('video_feed1') }}" alt="Live Camera Feed 5">
+            </div>
+            <div class="video-container">
+                <h2>Camera 6</h2>
+                <img src="{{ url_for('video_feed1') }}" alt="Live Camera Feed 6">
+            </div>
+
+
         </div>
     </main>
 </body>

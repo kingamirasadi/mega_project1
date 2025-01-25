@@ -5,15 +5,16 @@ import os
 import tempfile
 import threading
 import queue
+from face_database_handler import FaceDatabaseHandler  # Import the database handler
 
 
-class CameraFeed:
-    def __init__(self, url):
+class CameraFeed3:
+    def __init__(self, url, db_handler):
         print("Initializing CameraFeed...")
         # Initialize the camera
         self.camera = cv2.VideoCapture(url)
         if not self.camera.isOpened():
-            raise RuntimeError("Could not open camera.")
+            raise RuntimeError(f"Could not open camera at URL: {url}")
         print("Camera initialized successfully.")
 
         # Path to the database of known faces
@@ -21,9 +22,16 @@ class CameraFeed:
         if not os.path.exists(self.db_path):
             raise ValueError(f"Database path {self.db_path} does not exist.")
 
+        # Database handler for storing recognized faces
+        self.db_handler = db_handler
+
         # Queue for inter-thread communication
         self.frame_queue = queue.Queue(maxsize=10)
         self.stop_event = threading.Event()
+
+        # Thread for frame capture
+        self.capture_thread = threading.Thread(target=self.capture_frames, daemon=True)
+        self.capture_thread.start()
 
         print("CameraFeed initialized successfully.")
 
@@ -31,8 +39,10 @@ class CameraFeed:
         """
         Preprocess the frame to improve performance.
         - Resize the frame to a smaller resolution.
+        - Convert to grayscale for faster processing (optional).
         """
         frame = cv2.resize(frame, (640, 480))  # Resize to 640x480 for faster processing
+        # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # Optional: Convert to grayscale
         return frame
 
     def capture_frames(self):
@@ -45,6 +55,7 @@ class CameraFeed:
         while not self.stop_event.is_set():
             ret, frame = self.camera.read()
             if not ret:
+                print("Failed to capture frame. Exiting capture thread.")
                 break
 
             # Skip frames to reduce processing load
@@ -53,6 +64,8 @@ class CameraFeed:
                 frame = self.preprocess_frame(frame)
                 if not self.frame_queue.full():
                     self.frame_queue.put(frame)
+                else:
+                    print("Frame queue is full. Dropping frame.")
 
             frame_counter += 1
 
@@ -99,6 +112,9 @@ class CameraFeed:
                                         identity_path = df.iloc[0]['identity']
                                         name = os.path.basename(identity_path)
 
+                                        # Store the recognized face in MongoDB
+                                        self.db_handler.insert_face(name, tmp_file_path)
+
                                     else:
                                         name = "Unknown"
                                 else:
@@ -124,31 +140,23 @@ class CameraFeed:
 
                 # Encode frame as JPEG for streaming
                 _, buffer = cv2.imencode('.jpg', frame)
-                frame = buffer.tobytes()
+                frame_bytes = buffer.tobytes()
 
                 # Yield the frame for Flask streaming
                 yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
     def generate_frames(self):
         """
         Generate frames for streaming.
         """
-        # Start the frame capture thread
-        capture_thread = threading.Thread(target=self.capture_frames)
-        capture_thread.start()
-
         # Process frames in the main thread
         for frame in self.process_frames():
             yield frame
 
-        # Stop the capture thread
-        self.stop_event.set()
-        capture_thread.join()
-
     def release_camera(self):
         """Release the camera."""
+        self.stop_event.set()  # Signal the capture thread to stop
+        self.capture_thread.join()  # Wait for the capture thread to finish
         self.camera.release()
         print("Camera released.")
-
-

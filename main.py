@@ -3,8 +3,16 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from bson import ObjectId
 from database import AuthenticationDB
 from camera import CameraFeed
+from camera2 import LiveCam
+from camera3 import CameraFeed3
+from face_database_handler import FaceDatabaseHandler
 
 auth_db = AuthenticationDB()
+db_handler = FaceDatabaseHandler(
+        db_uri="mongodb://localhost:27017",
+        db_name="face_recognition_db",
+        collection_name="recognized_faces"
+    )
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -97,16 +105,42 @@ def camera_streaming():
     # Render the HTML template for streaming
     return render_template('camera_streaming2.html')
 
-@app.route('/video_feed')
-def video_feed():
+@app.route('/video_feed0')
+def video_feed0():
     # Create an instance of CameraFeed and return the video stream
-    camera_feed = CameraFeed(0)
-    return Response(camera_feed.generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    camera_feed0 = CameraFeed('')
+    return Response(camera_feed0.generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
 @app.route('/video_feed1')
 def video_feed1():
-    # Create an instance of CameraFeed and return the video stream
-    camera_feed = CameraFeed('https://192.168.1.210:8080/video')
-    return Response(camera_feed.generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    try:
+        # Create an instance of LiveCam
+        camera_feed1 = LiveCam('https://192.168.1.210:8080/video')
+
+        # Return the video stream
+        return Response(camera_feed1.LiveCamFeed(),mimetype='multipart/x-mixed-replace; boundary=frame')
+    except Exception as e:
+        # Handle errors (e.g., camera initialization failed)
+        return f"Error: {str(e)}", 500
+
+@app.route('/video_feed2')
+def video_feed2():
+    camera_feed2 = CameraFeed(url='https://192:8080/video', db_handler=db_handler)
+    return Response(camera_feed2.generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+@app.route('/video_feed3')
+def video_feed3():
+    try:
+        # Create an instance of LiveCam
+        camera_feed3 = CameraFeed3(0 , db_handler )
+
+        # Return the video stream
+        return Response(camera_feed3.generate_frames(),mimetype='multipart/x-mixed-replace; boundary=frame')
+    except Exception as e:
+        # Handle errors (e.g., camera initialization failed)
+        return f"Error: {str(e)}", 500
 
 
 @app.route('/logout')
