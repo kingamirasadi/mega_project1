@@ -23,6 +23,10 @@ def home():
         return redirect(url_for('camera_streaming'))
     return render_template('homepage.html')
 
+@app.route('/user_manage')
+def user_manage():
+ return  render_template('admin_login.html')
+
 @app.route('/create_account', methods=['GET', 'POST'])
 def create_account():
     if request.method == 'POST':
@@ -73,6 +77,29 @@ def login():
 
     return render_template('login.html')  # Render the login page for GET requests or after failed login attempts
 
+@app.route('/admin_login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        # Get user details by username
+        user = auth_db.get_user_by_username(username)
+
+        if user:
+            # Check if the provided password matches the stored hashed password
+            if check_password_hash(user['password_hash'], password):
+                flash('Login successful!', 'success')
+                # Store 'user_id' as string, distinguish non-ObjectId usernames
+                session['user_id'] = str(user['_id']) if '_id' in user else username
+                return render_template('user_mange.html')
+            else:
+                flash('Incorrect password. Please try again.', 'error')
+        else:
+            flash('Username does not exist. Please check your input or create an account.', 'error')
+
+    return render_template('admin_login.html')  # Render the login page for GET requests or after failed login attempts
+
 @app.route('/check_username', methods=['GET'])
 def check_username():
     username = request.args.get('username')  # Get the username from the request
@@ -83,6 +110,8 @@ def check_username():
         else:
             return jsonify({'exists': False})  # Return a JSON response indicating the username is available
     return jsonify({'exists': False})
+
+
 
 @app.route('/camera_streaming')
 def camera_streaming():

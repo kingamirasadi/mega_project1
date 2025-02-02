@@ -10,7 +10,7 @@
     <div class="login-container">
         <div class="login-form">
             <h2>Welcome</h2>
-            <p>Please choose an option:</p>
+            <p>Please Enter your Credentials :</p>
 
             <!-- Flash Messages -->
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -27,7 +27,6 @@
 
             <div class="button-container">
                 <button onclick="window.location.href='/login'">Login</button>
-                <button onclick="window.location.href='/create_account'">Create Account</button>
             </div>
         </div>
     </div>
