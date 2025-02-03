@@ -25,7 +25,7 @@ def home():
 
 @app.route('/user_manage')
 def user_manage():
- return  render_template('admin_login.html')
+    return render_template('admin_login.html')
 
 @app.route('/create_account', methods=['GET', 'POST'])
 def create_account():
@@ -34,7 +34,6 @@ def create_account():
         email = request.form.get('email')
         password = request.form.get('password')
 
-        # Check if the username or email already exists
         if auth_db.get_user_by_username(username):
             flash('Username already exists. Please choose a different username.', 'error')
             return render_template('create_account.html')
@@ -44,11 +43,11 @@ def create_account():
             return render_template('create_account.html')
 
         try:
-            # Create the user in the database
             user_id = auth_db.create_user(username, password, email)
             if user_id:
                 flash('Account created successfully! You can now log in.', 'success')
-                return redirect(url_for('home'))  # Redirect to the homepage after success
+                session.clear()  # Ensure no user is automatically logged in
+                return redirect(url_for('login'))  # Redirect to login page instead of home
         except Exception as e:
             flash(f'An error occurred: {str(e)}. Please try again later.', 'error')
 
@@ -60,22 +59,16 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
 
-        # Get user details by username
         user = auth_db.get_user_by_username(username)
 
-        if user:
-            # Check if the provided password matches the stored hashed password
-            if check_password_hash(user['password_hash'], password):
-                flash('Login successful!', 'success')
-                # Store 'user_id' as string, distinguish non-ObjectId usernames
-                session['user_id'] = str(user['_id']) if '_id' in user else username
-                return redirect(url_for('camera_streaming'))
-            else:
-                flash('Incorrect password. Please try again.', 'error')
+        if user and check_password_hash(user['password_hash'], password):
+            flash('Login successful!', 'success')
+            session['user_id'] = str(user['_id']) if '_id' in user else username
+            return redirect(url_for('camera_streaming'))
         else:
-            flash('Username does not exist. Please check your input or create an account.', 'error')
+            flash('Invalid username or password.', 'error')
 
-    return render_template('login.html')  # Render the login page for GET requests or after failed login attempts
+    return render_template('login.html')
 
 @app.route('/admin_login', methods=['GET', 'POST'])
 def admin_login():
@@ -83,35 +76,16 @@ def admin_login():
         username = request.form.get('username')
         password = request.form.get('password')
 
-        # Get user details by username
         user = auth_db.get_user_by_username(username)
 
-        if user:
-            # Check if the provided password matches the stored hashed password
-            if check_password_hash(user['password_hash'], password):
-                flash('Login successful!', 'success')
-                # Store 'user_id' as string, distinguish non-ObjectId usernames
-                session['user_id'] = str(user['_id']) if '_id' in user else username
-                return render_template('user_mange.html')
-            else:
-                flash('Incorrect password. Please try again.', 'error')
+        if user and check_password_hash(user['password_hash'], password):
+            flash('Login successful!', 'success')
+            session['user_id'] = str(user['_id']) if '_id' in user else username
+            return render_template('user_manage.html')
         else:
-            flash('Username does not exist. Please check your input or create an account.', 'error')
+            flash('Invalid username or password.', 'error')
 
-    return render_template('admin_login.html')  # Render the login page for GET requests or after failed login attempts
-
-@app.route('/check_username', methods=['GET'])
-def check_username():
-    username = request.args.get('username')  # Get the username from the request
-    if username:
-        user = auth_db.get_user_by_username(username)  # Check if the username exists in the database
-        if user:
-            return jsonify({'exists': True})  # Return a JSON response indicating the username is taken
-        else:
-            return jsonify({'exists': False})  # Return a JSON response indicating the username is available
-    return jsonify({'exists': False})
-
-
+    return render_template('admin_login.html')
 
 @app.route('/camera_streaming')
 def camera_streaming():
@@ -120,37 +94,25 @@ def camera_streaming():
         return redirect(url_for('login'))
 
     user_id = session['user_id']
-    # Check if 'user_id' is a valid ObjectId
-    user = None
-    if ObjectId.is_valid(user_id):
-        user = auth_db.get_user_by_id(ObjectId(user_id))  # Query using ObjectId
-    else:
-        user = auth_db.get_user_by_username(user_id)  # Query by username for non-ObjectId
+    user = auth_db.get_user_by_id(ObjectId(user_id)) if ObjectId.is_valid(user_id) else auth_db.get_user_by_username(user_id)
 
     if not user:
         flash('User not found. Please log in again.', 'error')
         return redirect(url_for('login'))
 
-    # Render the HTML template for streaming
     return render_template('camera_streaming2.html')
 
 @app.route('/video_feed0')
 def video_feed0():
-    # Create an instance of CameraFeed and return the video stream
     camera_feed0 = CameraFeed('')
     return Response(camera_feed0.generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
 
 @app.route('/video_feed1')
 def video_feed1():
     try:
-        # Create an instance of LiveCam
         camera_feed1 = LiveCam('https://192.168.1.210:8080/video')
-
-        # Return the video stream
-        return Response(camera_feed1.LiveCamFeed(),mimetype='multipart/x-mixed-replace; boundary=frame')
+        return Response(camera_feed1.LiveCamFeed(), mimetype='multipart/x-mixed-replace; boundary=frame')
     except Exception as e:
-        # Handle errors (e.g., camera initialization failed)
         return f"Error: {str(e)}", 500
 
 @app.route('/video_feed2')
@@ -158,23 +120,16 @@ def video_feed2():
     camera_feed2 = CameraFeed(url='https://192:8080/video', db_handler=db_handler)
     return Response(camera_feed2.generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-
 @app.route('/video_feed3')
 def video_feed3():
     try:
-        # Create an instance of LiveCam
-        camera_feed3 = CameraFeed3(0 , db_handler )
-
-        # Return the video stream
-        return Response(camera_feed3.generate_frames(),mimetype='multipart/x-mixed-replace; boundary=frame')
+        camera_feed3 = CameraFeed3(0, db_handler)
+        return Response(camera_feed3.generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
     except Exception as e:
-        # Handle errors (e.g., camera initialization failed)
         return f"Error: {str(e)}", 500
-
 
 @app.route('/logout')
 def logout():
-    # Clear the user session
     session.pop('user_id', None)
     flash('You have been logged out.', 'success')
     return redirect(url_for('home'))
